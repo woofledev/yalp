@@ -3,9 +3,8 @@ the linux package manager written in bash™
 
 readme in construction!!
 ## setup
-there's no install script (yet), but you can install yalp anywhere you'd like, and add it to your PATH.
-
-requirements: curl, GNU coreutils. (for some scripts u might need other packages but that depends).
+requirements: curl, GNU coreutils.<br>
+`curl -fsSL https://raw.githubusercontent.com/woofledev/yalp/main/scripts/install.sh | sh`
 ### configuring
 user settings are on the top of the file. you can change the `REPO` or `PKGDIR`
 
