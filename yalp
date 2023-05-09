@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+# -------------------------
+#      USER SETTINGS
+REPO=https://organized-absorbed-waxflower.glitch.me/yalp
+PKGDIR=$HOME/yalp
+#   END OF USER SETTINGS
+# -------------------------
+
+if [ ! -d "$PKGDIR" ]; then
+  mkdir -p "$PKGDIR"
+fi
+
+getpkg() {
+    mkdir -p $PKGDIR/$1
+    cd $PKGDIR/$1
+    printf "getting package: $1\n"
+    if curl -sSfO $REPO/pkg/$1.config > /dev/null; then
+        . $PKGDIR/$1/$1.config
+        curl -O $REPO/pkg/$REALNAME
+    else
+        rm -rf $PKGDIR/$1
+        exit 1
+    fi
+}
+
+cli_install() {
+    pkgs=("$@")
+    # its typical to download the package first, and then set everything up.
+    for pkg in "${pkgs[@]}"; do
+        getpkg "$pkg"
+    done
+    for pkg in "${pkgs[@]}"; do
+        ADDTOPATH="false" # if this isnt set to anything else at start, some packages will be installed to PATH which arent supposed to for some reason.
+        . $PKGDIR/$pkg/$pkg.config
+        cd $PKGDIR/$pkg
+        printf "\n$ $INSTALL_CMD\n"
+        eval "$INSTALL_CMD"
+        if [[ "$ADDTOPATH" == "true" ]]; then
+            if command -v grep >/dev/null 2>&1 && ! echo $PATH | grep -q "$PKGDIR/$pkg"; then
+                if [ -n "$BASH_VERSION" ]; then
+                    echo "export PATH=\"\$PATH:$PKGDIR/$pkg\"" >> "$HOME/.bashrc"
+                    export PATH=\"\$PATH:$PKGDIR/$pkg\"
+                elif [ -n "$ZSH_VERSION" ]; then
+                    echo "export PATH=\"\$PATH:$PKGDIR/$pkg\"" >> "$HOME/.zshrc"
+                    export PATH=\"\$PATH:$PKGDIR/$pkg\"
+                fi
+            fi
+            echo Added $pkg to PATH. You might need to restart your shell for $pkg to work.
+        fi
+    done
+}
+cli_remove() {
+    for pkg in "$@"; do
+        rm -rvf $PKGDIR/$pkg
+    done
+}
+
+YALP_VERSION="0.5.4"
+case "$1" in
+    install|i)
+        if [ $# -lt 2 ]; then
+            echo "yalp: missing second argument" >&2
+            exit 1
+        fi
+        cli_install "${@:2}";;
+    uninstall|rm)
+        if [ $# -lt 2 ]; then
+            echo "yalp: missing second argument" >&2
+            exit 1
+        fi
+        cli_remove "${@:2}";;
+    run)
+        if [ -z "$2" ]; then
+            echo "yalp: missing second argument" >&2
+            exit 1
+        fi
+        . $PKGDIR/$2/$2.config
+        cd $PKGDIR/$2
+        eval "$EXEC_CMD";;
+    search)
+        if [ -z "$2" ]; then
+            echo "yalp: missing second argument" >&2
+            exit 1
+        fi
+        curl -sS $REPO/search?q=$2;;
+    update)
+        for f in $(find $PKGDIR -type f -name "*.config"); do
+            . $f
+            curl -sS $REPO/pkg/$(basename $f) -o $f.new
+            OLDPKGVER=$PKGVER
+            . $f.new
+            if [ "$PKGVER" != "$OLDPKGVER" ]; then
+                echo $(basename -s .config $f): $OLDPKGVER "=>" $PKGVER
+                cli_install $(basename -s .config $f)
+            fi
+            rm $f.new
+        done;;
+    *)
+        printf "yalp v$YALP_VERSION\nvariables:\n   REPO: $REPO\n   PKGDIR: $PKGDIR\n\n"
+        printf "commands:\n   install/i - installs a package\n"
+        printf "   uninstall/rm - removes a package\n"
+        printf "   run - runs a package (EXEC_CMD from config file)\n"
+        printf "   update - (BETA) updates all packages\n"
+        printf "   search - searches the repo\n";;
+esac
