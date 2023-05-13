@@ -8,12 +8,13 @@ curl -# https://raw.githubusercontent.com/woofledev/yalp/main/yalp --output "$IN
 chmod +x "$INSTALLDIR/yalp"
 
 echo adding to path
-export PATH="$PATH:$INSTALLDIR"
-if ! echo $PATH | grep -q "$INSTALLDIR"; then
+if command -v grep >/dev/null 2>&1 && ! echo $PATH | grep -q "$INSTALLDIR"; then
     if [ -n "$BASH_VERSION" ]; then
         echo "export PATH=\"\$PATH:$INSTALLDIR\"" >> "$HOME/.bashrc"
+        export PATH="$PATH:$INSTALLDIR"
     elif [ -n "$ZSH_VERSION" ]; then
         echo "export PATH=\"\$PATH:$INSTALLDIR\"" >> "$HOME/.zshrc"
+        export PATH="$PATH:$INSTALLDIR"
     fi
 fi
 

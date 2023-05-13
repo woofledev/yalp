@@ -40,10 +40,10 @@ cli_install() {
             if command -v grep >/dev/null 2>&1 && ! echo $PATH | grep -q "$PKGDIR/$pkg"; then
                 if [ -n "$BASH_VERSION" ]; then
                     echo "export PATH=\"\$PATH:$PKGDIR/$pkg\"" >> "$HOME/.bashrc"
-                    export PATH=\"\$PATH:$PKGDIR/$pkg\"
+                    export PATH="$PATH:$PKGDIR/$pkg"
                 elif [ -n "$ZSH_VERSION" ]; then
                     echo "export PATH=\"\$PATH:$PKGDIR/$pkg\"" >> "$HOME/.zshrc"
-                    export PATH=\"\$PATH:$PKGDIR/$pkg\"
+                    export PATH="$PATH:$PKGDIR/$pkg"
                 fi
             fi
             echo Added $pkg to PATH. You might need to restart your shell for $pkg to work.
