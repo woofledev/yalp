@@ -34,7 +34,7 @@ cli_install() {
         ADDTOPATH="false" # if this isnt set to anything else at start, some packages will be installed to PATH which arent supposed to for some reason.
         . $PKGDIR/$pkg/$pkg.config
         cd $PKGDIR/$pkg
-        printf "\n$ $INSTALL_CMD\n"
+        printf "\nPerforming install for $pkg...\n"
         eval "$INSTALL_CMD"
         if [[ "$ADDTOPATH" == "true" ]]; then
             if command -v grep >/dev/null 2>&1 && ! echo $PATH | grep -q "$PKGDIR/$pkg"; then
@@ -87,14 +87,14 @@ case "$1" in
     update)
         for f in $(find $PKGDIR -type f -name "*.config"); do
             . $f
-            curl -sS $REPO/pkg/$(basename $f) -o $f.new
+            curl -sS $REPO/pkg/$(basename $f) -o $f.config.new
             OLDPKGVER=$PKGVER
-            . $f.new
+            . $f.config.new
             if [ "$PKGVER" != "$OLDPKGVER" ]; then
                 echo $(basename -s .config $f): $OLDPKGVER "=>" $PKGVER
                 cli_install $(basename -s .config $f)
             fi
-            rm $f.new
+            rm $f.config.new
         done;;
     *)
         printf "yalp v$YALP_VERSION\nvariables:\n   REPO: $REPO\n   PKGDIR: $PKGDIR\n\n"
